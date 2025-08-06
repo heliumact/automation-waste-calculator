@@ -7,6 +7,7 @@ export interface Activity {
   duration: number; // in hours
   hourlyRate: number;
   category: string;
+  comments?: string;
   roiData?: {
     automationCost: number;
     efficiencyReduction: number;

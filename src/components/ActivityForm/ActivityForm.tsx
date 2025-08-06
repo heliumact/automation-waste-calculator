@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ const activitySchema = z.object({
   durationMinutes: z.number().min(0, 'Minutes must be 0 or greater').max(59, 'Minutes must be 59 or less'),
   hourlyRate: z.number().min(0.01, 'Hourly rate must be greater than 0'),
   category: z.string().min(1, 'Category is required'),
+  comments: z.string().optional(),
 }).refine((data) => data.durationHours > 0 || data.durationMinutes > 0, {
   message: 'Duration must be greater than 0',
   path: ['durationMinutes'],
@@ -84,6 +86,7 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
       durationMinutes: 30,
       hourlyRate: 25,
       category: 'Administrative',
+      comments: '',
     },
   });
 
@@ -114,6 +117,7 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
     const activityData = {
       ...data,
       duration,
+      comments: data.comments || undefined,
       roiData: currentROIData || undefined,
       // Remove the separate hour/minute fields
       durationHours: undefined,
@@ -274,6 +278,19 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
             />
             {errors.hourlyRate && (
               <p className="text-sm text-red-500">{errors.hourlyRate.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="comments">Comments (Optional)</Label>
+            <Textarea
+              id="comments"
+              placeholder="Notes about how you calculated this activity, context, or other relevant details..."
+              rows={3}
+              {...register('comments')}
+            />
+            {errors.comments && (
+              <p className="text-sm text-red-500">{errors.comments.message}</p>
             )}
           </div>
 

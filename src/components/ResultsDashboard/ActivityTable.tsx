@@ -12,6 +12,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ActivityWithCosts } from '@/types/activity';
 import { formatCurrency, formatDuration, formatPercentage } from '@/utils/calculations';
 import { Trash2, List, Download } from 'lucide-react';
@@ -68,7 +74,8 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
       'Efficiency Improvement (%)',
       'ROI (%)',
       'Payback Period (months)',
-      'Annual Savings'
+      'Annual Savings',
+      'Comments'
     ];
 
     const rows = activities.map(activity => [
@@ -87,6 +94,7 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
       activity.roiData ? formatPercentage(activity.roiData.roi) : 'N/A',
       activity.roiData ? activity.roiData.paybackPeriodMonths.toFixed(1) : 'N/A',
       activity.roiData ? formatCurrency(activity.roiData.annualSavings) : 'N/A',
+      activity.comments || ''
     ]);
 
     const csvContent = [headers, ...rows]
@@ -196,6 +204,7 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
               </TableRow>
             </TableHeader>
             <TableBody>
+              <TooltipProvider>
               {sortedActivities.map((activity) => (
                 <TableRow key={activity.id}>
                   <TableCell className="font-mono text-center">
@@ -203,7 +212,20 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                   </TableCell>
                   <TableCell className="font-medium">
                     <div>
-                      <div className="font-semibold">{activity.name}</div>
+                      {activity.comments ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="font-semibold cursor-help underline decoration-dotted decoration-muted-foreground underline-offset-2">
+                              {activity.name}
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm">{activity.comments}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <div className="font-semibold">{activity.name}</div>
+                      )}
                       <div className="text-sm text-muted-foreground">
                         ${activity.hourlyRate}/hr
                       </div>
@@ -292,6 +314,7 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                   </TableCell>
                 </TableRow>
               ))}
+              </TooltipProvider>
             </TableBody>
           </Table>
         </div>
