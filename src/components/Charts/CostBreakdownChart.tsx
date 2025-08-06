@@ -74,7 +74,11 @@ export function CostBreakdownChart({ activities }: CostBreakdownChartProps) {
     color: COLORS[index % COLORS.length],
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: {
+    active?: boolean;
+    payload?: Array<{ value: number }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border border-border p-3 rounded-lg shadow-lg">
@@ -89,7 +93,10 @@ export function CostBreakdownChart({ activities }: CostBreakdownChartProps) {
     return null;
   };
 
-  const PieTooltip = ({ active, payload }: any) => {
+  const PieTooltip = ({ active, payload }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number }>;
+  }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background border border-border p-3 rounded-lg shadow-lg">
@@ -154,7 +161,7 @@ export function CostBreakdownChart({ activities }: CostBreakdownChartProps) {
                 cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => 
-                  `${name}: ${(percent * 100).toFixed(0)}%`
+                  `${name}: ${((percent || 0) * 100).toFixed(0)}%`
                 }
                 outerRadius={80}
                 fill="#8884d8"

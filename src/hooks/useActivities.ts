@@ -26,7 +26,7 @@ export function useActivities() {
 
   // Save to localStorage when activities change
   useEffect(() => {
-    const activitiesToStore = activities.map(({ costs, ...activity }) => activity);
+    const activitiesToStore = activities.map(({ costs: _, ...activity }) => activity);
     localStorage.setItem('automation-calculator-activities', JSON.stringify(activitiesToStore));
   }, [activities]);
 

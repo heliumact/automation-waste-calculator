@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+
 import { CostCalculation } from '@/types/activity';
 import { formatCurrency } from '@/utils/calculations';
 import { DollarSign, TrendingUp, Calendar, Clock } from 'lucide-react';

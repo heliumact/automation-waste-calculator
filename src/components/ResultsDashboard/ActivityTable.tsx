@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ActivityWithCosts } from '@/types/activity';
 import { formatCurrency, formatDuration } from '@/utils/calculations';
-import { Trash2, Edit, List } from 'lucide-react';
+import { Trash2, List } from 'lucide-react';
 
 interface ActivityTableProps {
   activities: ActivityWithCosts[];
