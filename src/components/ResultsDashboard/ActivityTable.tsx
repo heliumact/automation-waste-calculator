@@ -65,10 +65,10 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
       'Monthly Cost',
       'Annual Cost',
       'Investment Cost',
+      'Efficiency Improvement (%)',
       'ROI (%)',
       'Payback Period (months)',
-      'Annual Savings',
-      'Efficiency Improvement (%)'
+      'Annual Savings'
     ];
 
     const rows = activities.map(activity => [
@@ -83,10 +83,10 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
       formatCurrency(activity.costs.monthly),
       formatCurrency(activity.costs.annual),
       activity.roiData ? formatCurrency(activity.roiData.automationCost) : 'N/A',
+      activity.roiData ? `${activity.roiData.efficiencyReduction}%` : 'N/A',
       activity.roiData ? formatPercentage(activity.roiData.roi) : 'N/A',
       activity.roiData ? activity.roiData.paybackPeriodMonths.toFixed(1) : 'N/A',
       activity.roiData ? formatCurrency(activity.roiData.annualSavings) : 'N/A',
-      activity.roiData ? `${activity.roiData.efficiencyReduction}%` : 'N/A',
     ]);
 
     const csvContent = [headers, ...rows]
@@ -188,6 +188,7 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                   Annual Cost {sortField === 'annual' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
                 <TableHead>Investment Cost</TableHead>
+                <TableHead>Efficiency Improvement</TableHead>
                 <TableHead>ROI %</TableHead>
                 <TableHead>Payback</TableHead>
                 <TableHead>Annual Savings</TableHead>
@@ -228,6 +229,15 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                     {activity.roiData ? (
                       <span className="font-semibold text-blue-600">
                         {formatCurrency(activity.roiData.automationCost)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.roiData ? (
+                      <span className="font-semibold text-purple-600">
+                        {activity.roiData.efficiencyReduction}%
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">N/A</span>

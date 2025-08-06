@@ -1,12 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { ActivityWithCosts } from '@/types/activity';
 import { calculateAutomationROI, formatCurrency, formatPercentage } from '@/utils/calculations';
 import { Calculator, TrendingUp, Clock, DollarSign } from 'lucide-react';
@@ -16,8 +12,6 @@ interface ROICalculatorProps {
 }
 
 export function ROICalculator({ activities }: ROICalculatorProps) {
-  const [efficiencyReduction, setEfficiencyReduction] = useState<number>(80);
-  
   if (activities.length === 0) {
     return (
       <Card>
@@ -44,7 +38,16 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
     return sum + (activity.roiData?.automationCost || 0);
   }, 0);
   
-  const roiData = calculateAutomationROI(totalAnnualCost, totalAutomationCost, efficiencyReduction);
+  // Calculate weighted average efficiency improvement based on activity costs
+  const activitiesWithROI = activities.filter(activity => activity.roiData);
+  const weightedEfficiencySum = activitiesWithROI.reduce((sum, activity) => {
+    return sum + (activity.roiData!.efficiencyReduction * activity.costs.annual);
+  }, 0);
+  const averageEfficiencyReduction = activitiesWithROI.length > 0 
+    ? weightedEfficiencySum / totalAnnualCost 
+    : 80; // fallback to 80% if no ROI data
+  
+  const roiData = calculateAutomationROI(totalAnnualCost, totalAutomationCost, averageEfficiencyReduction);
 
   const getROIColor = (roi: number) => {
     if (roi >= 200) return 'text-green-600';
@@ -84,26 +87,16 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="efficiencyReduction">Efficiency Improvement (%)</Label>
-            <Input
-              id="efficiencyReduction"
-              type="number"
-              value={efficiencyReduction}
-              onChange={(e) => setEfficiencyReduction(Number(e.target.value))}
-              min="0"
-              max="100"
-              step="5"
-            />
+            <Label>Average Efficiency Improvement</Label>
+            <div className="flex items-center h-10 px-3 py-2 border border-input bg-muted rounded-md">
+              <span className="text-lg font-semibold text-purple-600">
+                {averageEfficiencyReduction.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Weighted average based on activity costs
+            </p>
           </div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>Efficiency Improvement</span>
-            <span>{efficiencyReduction}%</span>
-          </div>
-          <Progress value={efficiencyReduction} className="h-2" />
         </div>
 
         {/* Results Grid */}
@@ -190,7 +183,7 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
         <div className="bg-muted/50 p-4 rounded-lg">
           <h4 className="font-semibold mb-2">Investment Summary</h4>
           <p className="text-sm text-muted-foreground">
-            With a total automation investment of {formatCurrency(totalAutomationCost)} across all activities and {efficiencyReduction}% efficiency improvement, 
+            With a total automation investment of {formatCurrency(totalAutomationCost)} across all activities, 
             you could save {formatCurrency(roiData.annualSavings)} annually. 
             This represents a {formatPercentage(roiData.roi)} ROI with a payback period of {roiData.paybackPeriodMonths.toFixed(1)} months.
           </p>
