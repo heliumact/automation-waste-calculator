@@ -16,7 +16,7 @@ interface ROICalculatorProps {
 }
 
 export function ROICalculator({ activities }: ROICalculatorProps) {
-  const [automationCost, setAutomationCost] = useState<number>(5000);
+  const [automationCost, setAutomationCost] = useState<number>(2000);
   const [efficiencyReduction, setEfficiencyReduction] = useState<number>(80);
   
   if (activities.length === 0) {

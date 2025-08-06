@@ -13,8 +13,10 @@ export function useActivities() {
     if (stored) {
       try {
         const parsedActivities: Activity[] = JSON.parse(stored);
-        const activitiesWithCosts = parsedActivities.map(activity => ({
+        const activitiesWithCosts = parsedActivities.map((activity, index) => ({
           ...activity,
+          // Add activity number if it doesn't exist (backward compatibility)
+          activityNumber: activity.activityNumber || index + 1,
           costs: calculateActivityCosts(activity),
         }));
         setActivities(activitiesWithCosts);
@@ -30,10 +32,15 @@ export function useActivities() {
     localStorage.setItem('automation-calculator-activities', JSON.stringify(activitiesToStore));
   }, [activities]);
 
-  const addActivity = (activity: Omit<Activity, 'id'>) => {
+  const addActivity = (activity: Omit<Activity, 'id' | 'activityNumber'>) => {
+    const newActivityNumber = activities.length > 0 
+      ? Math.max(...activities.map(a => a.activityNumber)) + 1 
+      : 1;
+    
     const newActivity: Activity = {
       ...activity,
       id: Date.now().toString(),
+      activityNumber: newActivityNumber,
     };
     
     const activityWithCosts: ActivityWithCosts = {

@@ -22,12 +22,20 @@ interface ActivityTableProps {
 }
 
 export function ActivityTable({ activities, onRemoveActivity }: ActivityTableProps) {
-  const [sortField, setSortField] = useState<keyof ActivityWithCosts['costs']>('annual');
+  const [sortField, setSortField] = useState<keyof ActivityWithCosts['costs'] | 'activityNumber'>('annual');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   const sortedActivities = [...activities].sort((a, b) => {
-    const aValue = a.costs[sortField];
-    const bValue = b.costs[sortField];
+    let aValue: number;
+    let bValue: number;
+    
+    if (sortField === 'activityNumber') {
+      aValue = a.activityNumber;
+      bValue = b.activityNumber;
+    } else {
+      aValue = a.costs[sortField];
+      bValue = b.costs[sortField];
+    }
     
     if (sortDirection === 'asc') {
       return aValue - bValue;
@@ -35,12 +43,12 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
     return bValue - aValue;
   });
 
-  const handleSort = (field: keyof ActivityWithCosts['costs']) => {
+  const handleSort = (field: keyof ActivityWithCosts['costs'] | 'activityNumber') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('desc');
+      setSortDirection(field === 'activityNumber' ? 'asc' : 'desc');
     }
   };
 
@@ -77,6 +85,12 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead 
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('activityNumber')}
+                >
+                  Activity # {sortField === 'activityNumber' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </TableHead>
                 <TableHead>Activity</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Frequency</TableHead>
@@ -105,6 +119,9 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
             <TableBody>
               {sortedActivities.map((activity) => (
                 <TableRow key={activity.id}>
+                  <TableCell className="font-mono text-center">
+                    {activity.activityNumber}
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div>
                       <div className="font-semibold">{activity.name}</div>

@@ -21,15 +21,19 @@ const activitySchema = z.object({
   name: z.string().min(1, 'Activity name is required'),
   frequency: z.number().min(0.1, 'Frequency must be greater than 0'),
   interval: z.enum(['hour', 'day', 'week', 'month']),
-  duration: z.number().min(0.01, 'Duration must be greater than 0'),
+  durationHours: z.number().min(0, 'Hours must be 0 or greater').max(23, 'Hours must be 23 or less'),
+  durationMinutes: z.number().min(0, 'Minutes must be 0 or greater').max(59, 'Minutes must be 59 or less'),
   hourlyRate: z.number().min(0.01, 'Hourly rate must be greater than 0'),
   category: z.string().min(1, 'Category is required'),
+}).refine((data) => data.durationHours > 0 || data.durationMinutes > 0, {
+  message: 'Duration must be greater than 0',
+  path: ['durationMinutes'],
 });
 
 type ActivityFormData = z.infer<typeof activitySchema>;
 
 interface ActivityFormProps {
-  onAddActivity: (activity: Omit<Activity, 'id'>) => void;
+  onAddActivity: (activity: Omit<Activity, 'id' | 'activityNumber'>) => void;
 }
 
 const categories = [
@@ -64,14 +68,26 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
       name: '',
       frequency: 1,
       interval: 'day',
-      duration: 0.5,
+      durationHours: 0,
+      durationMinutes: 30,
       hourlyRate: 25,
       category: 'Administrative',
     },
   });
 
   const onSubmit = (data: ActivityFormData) => {
-    onAddActivity(data);
+    // Convert hours and minutes to decimal hours
+    const duration = data.durationHours + (data.durationMinutes / 60);
+    const activityData = {
+      ...data,
+      duration,
+      // Remove the separate hour/minute fields
+      durationHours: undefined,
+      durationMinutes: undefined,
+    };
+    // Clean up undefined fields
+    const { durationHours, durationMinutes, ...cleanData } = activityData;
+    onAddActivity(cleanData);
     reset();
   };
 
@@ -80,7 +96,7 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Plus className="h-5 w-5" />
-          Add New Activity
+          Enter current manual process here
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -160,18 +176,52 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration">Duration (hours)</Label>
-            <Input
-              id="duration"
-              type="number"
-              step="0.25"
-              min="0.01"
-              placeholder="e.g., 2.5"
-              {...register('duration', { valueAsNumber: true })}
-            />
-            {errors.duration && (
-              <p className="text-sm text-red-500">{errors.duration.message}</p>
-            )}
+            <Label>Duration</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="durationHours">Hours</Label>
+                <Select
+                  value={watch('durationHours').toString()}
+                  onValueChange={(value) => setValue('durationHours', Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {i} {i === 1 ? 'hour' : 'hours'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.durationHours && (
+                  <p className="text-sm text-red-500">{errors.durationHours.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="durationMinutes">Minutes</Label>
+                <Select
+                  value={watch('durationMinutes').toString()}
+                  onValueChange={(value) => setValue('durationMinutes', Number(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 60 }, (_, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {i} {i === 1 ? 'minute' : 'minutes'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.durationMinutes && (
+                  <p className="text-sm text-red-500">{errors.durationMinutes.message}</p>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -191,7 +241,7 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
 
           <Button type="submit" className="w-full" disabled={!isValid}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Activity
+            Add Manual Process
           </Button>
         </form>
       </CardContent>

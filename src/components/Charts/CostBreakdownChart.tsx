@@ -128,10 +128,20 @@ export function CostBreakdownChart({ activities }: CostBreakdownChartProps) {
               <XAxis 
                 dataKey="period" 
                 className="text-muted-foreground"
+                tick={{ fontSize: 12 }}
               />
               <YAxis 
                 className="text-muted-foreground"
-                tickFormatter={(value) => formatCurrency(value)}
+                tickFormatter={(value) => {
+                  if (value >= 1000000) {
+                    return `$${(value / 1000000).toFixed(1)}M`;
+                  } else if (value >= 1000) {
+                    return `$${(value / 1000).toFixed(0)}K`;
+                  }
+                  return formatCurrency(value);
+                }}
+                width={60}
+                tick={{ fontSize: 12 }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Bar 
@@ -160,12 +170,20 @@ export function CostBreakdownChart({ activities }: CostBreakdownChartProps) {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => 
-                  `${name}: ${((percent || 0) * 100).toFixed(0)}%`
-                }
+                label={({ name, percent }) => {
+                  const percentage = ((percent || 0) * 100).toFixed(0);
+                  // Show only percentage for slices > 10%, truncate long names
+                  if ((percent || 0) >= 0.1) {
+                    const shortName = name.length > 15 ? name.substring(0, 12) + '...' : name;
+                    return `${shortName}: ${percentage}%`;
+                  }
+                  // For small slices, only show percentage
+                  return `${percentage}%`;
+                }}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"
+                style={{ fontSize: '11px' }}
               >
                 {activitiesData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />

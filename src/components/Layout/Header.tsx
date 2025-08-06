@@ -13,7 +13,7 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Automation Waste Calculator
+                Manual Activity Waste Calculator
               </h1>
               <p className="text-sm text-muted-foreground">
                 Calculate the cost of manual tasks and potential automation savings

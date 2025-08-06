@@ -1,5 +1,6 @@
 export interface Activity {
   id: string;
+  activityNumber: number;
   name: string;
   frequency: number;
   interval: 'hour' | 'day' | 'week' | 'month';
