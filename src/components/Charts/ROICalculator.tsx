@@ -16,7 +16,6 @@ interface ROICalculatorProps {
 }
 
 export function ROICalculator({ activities }: ROICalculatorProps) {
-  const [automationCost, setAutomationCost] = useState<number>(2000);
   const [efficiencyReduction, setEfficiencyReduction] = useState<number>(80);
   
   if (activities.length === 0) {
@@ -25,13 +24,13 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />
-            Automation ROI Calculator
+            Automation Investment ROI Calculator
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <Calculator className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Add activities to calculate automation ROI</p>
+            <p>Add activities to calculate automation investment ROI</p>
           </div>
         </CardContent>
       </Card>
@@ -39,7 +38,13 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
   }
 
   const totalAnnualCost = activities.reduce((sum, activity) => sum + activity.costs.annual, 0);
-  const roiData = calculateAutomationROI(totalAnnualCost, automationCost, efficiencyReduction);
+  
+  // Calculate total automation investment from all activities that have ROI data
+  const totalAutomationCost = activities.reduce((sum, activity) => {
+    return sum + (activity.roiData?.automationCost || 0);
+  }, 0);
+  
+  const roiData = calculateAutomationROI(totalAnnualCost, totalAutomationCost, efficiencyReduction);
 
   const getROIColor = (roi: number) => {
     if (roi >= 200) return 'text-green-600';
@@ -60,22 +65,22 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calculator className="h-5 w-5" />
-          Automation ROI Calculator
+          Automation Investment ROI Calculator
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Input Controls */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="automationCost">Automation Investment ($)</Label>
-            <Input
-              id="automationCost"
-              type="number"
-              value={automationCost}
-              onChange={(e) => setAutomationCost(Number(e.target.value))}
-              min="0"
-              step="100"
-            />
+            <Label>Total Automation Investment</Label>
+            <div className="flex items-center h-10 px-3 py-2 border border-input bg-muted rounded-md">
+              <span className="text-lg font-semibold text-blue-600">
+                {formatCurrency(totalAutomationCost)}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Sum of all individual activity automation costs
+            </p>
           </div>
           
           <div className="space-y-2">
@@ -185,7 +190,7 @@ export function ROICalculator({ activities }: ROICalculatorProps) {
         <div className="bg-muted/50 p-4 rounded-lg">
           <h4 className="font-semibold mb-2">Investment Summary</h4>
           <p className="text-sm text-muted-foreground">
-            With an investment of {formatCurrency(automationCost)} and {efficiencyReduction}% efficiency improvement, 
+            With a total automation investment of {formatCurrency(totalAutomationCost)} across all activities and {efficiencyReduction}% efficiency improvement, 
             you could save {formatCurrency(roiData.annualSavings)} annually. 
             This represents a {formatPercentage(roiData.roi)} ROI with a payback period of {roiData.paybackPeriodMonths.toFixed(1)} months.
           </p>

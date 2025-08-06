@@ -16,7 +16,7 @@ export function Header() {
                 Manual Activity Waste Calculator
               </h1>
               <p className="text-sm text-muted-foreground">
-                Calculate the cost of manual tasks and potential automation savings
+                Calculate the current cost of your manual activities, the cost of automating them, and the expected ROI based on the saved manual effort
               </p>
             </div>
           </div>

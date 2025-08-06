@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +17,9 @@ import {
 } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { Activity } from '@/types/activity';
+import { calculateActivityCosts } from '@/utils/calculations';
+import { RealTimeCalculator } from './RealTimeCalculator';
+import { CurrentActivityROI } from './CurrentActivityROI';
 
 const activitySchema = z.object({
   name: z.string().min(1, 'Activity name is required'),
@@ -55,6 +59,14 @@ const intervals = [
 ];
 
 export function ActivityForm({ onAddActivity }: ActivityFormProps) {
+  const [currentROIData, setCurrentROIData] = useState<{
+    automationCost: number;
+    efficiencyReduction: number;
+    roi: number;
+    paybackPeriodMonths: number;
+    annualSavings: number;
+  } | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -75,31 +87,57 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
     },
   });
 
-  const onSubmit = (data: ActivityFormData) => {
+  // Calculate real-time costs for current form data
+  const watchedData = watch();
+  
+  const currentCosts = useMemo(() => {
+    if (watchedData.name && watchedData.frequency > 0 && (watchedData.durationHours > 0 || watchedData.durationMinutes > 0) && watchedData.hourlyRate > 0) {
+      const duration = watchedData.durationHours + (watchedData.durationMinutes / 60);
+      const tempActivity: Activity = {
+        id: 'temp',
+        activityNumber: 0,
+        name: watchedData.name,
+        frequency: watchedData.frequency,
+        interval: watchedData.interval,
+        duration,
+        hourlyRate: watchedData.hourlyRate,
+        category: watchedData.category,
+      };
+      return calculateActivityCosts(tempActivity);
+    }
+    return null;
+  }, [watchedData.name, watchedData.frequency, watchedData.durationHours, watchedData.durationMinutes, watchedData.hourlyRate, watchedData.interval, watchedData.category]);
+
+  const onSubmit = useCallback((data: ActivityFormData) => {
     // Convert hours and minutes to decimal hours
     const duration = data.durationHours + (data.durationMinutes / 60);
     const activityData = {
       ...data,
       duration,
+      roiData: currentROIData || undefined,
       // Remove the separate hour/minute fields
       durationHours: undefined,
       durationMinutes: undefined,
     };
     // Clean up undefined fields
-    const { durationHours, durationMinutes, ...cleanData } = activityData;
+    const { durationHours: _, durationMinutes: __, ...cleanData } = activityData;
     onAddActivity(cleanData);
     reset();
-  };
+    setCurrentROIData(null);
+  }, [currentROIData, onAddActivity, reset]);
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Plus className="h-5 w-5" />
-          Enter current manual process here
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      {/* Left Column - Form */}
+      <div className="lg:col-span-2">
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Current Manual Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Activity Name</Label>
@@ -241,10 +279,22 @@ export function ActivityForm({ onAddActivity }: ActivityFormProps) {
 
           <Button type="submit" className="w-full" disabled={!isValid}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Manual Process
+            Add Manual Activity
           </Button>
         </form>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Right Column - Real-time Calculations */}
+      <div className="lg:col-span-3 space-y-6">
+        <RealTimeCalculator costs={currentCosts} />
+        
+        <CurrentActivityROI 
+          costs={currentCosts} 
+          onROIChange={setCurrentROIData}
+        />
+      </div>
+    </div>
   );
 }

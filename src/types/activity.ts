@@ -7,6 +7,13 @@ export interface Activity {
   duration: number; // in hours
   hourlyRate: number;
   category: string;
+  roiData?: {
+    automationCost: number;
+    efficiencyReduction: number;
+    roi: number;
+    paybackPeriodMonths: number;
+    annualSavings: number;
+  };
 }
 
 export interface CostCalculation {

@@ -13,8 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ActivityWithCosts } from '@/types/activity';
-import { formatCurrency, formatDuration } from '@/utils/calculations';
-import { Trash2, List } from 'lucide-react';
+import { formatCurrency, formatDuration, formatPercentage } from '@/utils/calculations';
+import { Trash2, List, Download } from 'lucide-react';
 
 interface ActivityTableProps {
   activities: ActivityWithCosts[];
@@ -52,14 +52,77 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
     }
   };
 
+  const exportToCSV = () => {
+    const headers = [
+      'Activity #',
+      'Activity Name',
+      'Category',
+      'Frequency',
+      'Interval',
+      'Duration',
+      'Hourly Rate',
+      'Weekly Cost',
+      'Monthly Cost',
+      'Annual Cost',
+      'Investment Cost',
+      'ROI (%)',
+      'Payback Period (months)',
+      'Annual Savings',
+      'Efficiency Improvement (%)'
+    ];
+
+    const rows = activities.map(activity => [
+      activity.activityNumber,
+      activity.name,
+      activity.category,
+      activity.frequency,
+      activity.interval,
+      formatDuration(activity.duration),
+      `$${activity.hourlyRate}`,
+      formatCurrency(activity.costs.weekly),
+      formatCurrency(activity.costs.monthly),
+      formatCurrency(activity.costs.annual),
+      activity.roiData ? formatCurrency(activity.roiData.automationCost) : 'N/A',
+      activity.roiData ? formatPercentage(activity.roiData.roi) : 'N/A',
+      activity.roiData ? activity.roiData.paybackPeriodMonths.toFixed(1) : 'N/A',
+      activity.roiData ? formatCurrency(activity.roiData.annualSavings) : 'N/A',
+      activity.roiData ? `${activity.roiData.efficiencyReduction}%` : 'N/A',
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `automation-opportunities-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (activities.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <List className="h-5 w-5" />
-            Activities Overview
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <List className="h-5 w-5" />
+              Automation Opportunities Overview
+            </CardTitle>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={exportToCSV}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
@@ -75,10 +138,21 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <List className="h-5 w-5" />
-          Activities Overview
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <List className="h-5 w-5" />
+            Automation Opportunities Overview
+          </CardTitle>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={exportToCSV}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="rounded-md border">
@@ -113,6 +187,10 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                 >
                   Annual Cost {sortField === 'annual' && (sortDirection === 'asc' ? '↑' : '↓')}
                 </TableHead>
+                <TableHead>Investment Cost</TableHead>
+                <TableHead>ROI %</TableHead>
+                <TableHead>Payback</TableHead>
+                <TableHead>Annual Savings</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -145,6 +223,50 @@ export function ActivityTable({ activities, onRemoveActivity }: ActivityTablePro
                   </TableCell>
                   <TableCell className="font-semibold text-orange-600">
                     {formatCurrency(activity.costs.annual)}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.roiData ? (
+                      <span className="font-semibold text-blue-600">
+                        {formatCurrency(activity.roiData.automationCost)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.roiData ? (
+                      <span className={`font-semibold ${
+                        activity.roiData.roi >= 200 ? 'text-green-600' :
+                        activity.roiData.roi >= 100 ? 'text-blue-600' :
+                        activity.roiData.roi >= 0 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {formatPercentage(activity.roiData.roi)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.roiData ? (
+                      <span className={`font-semibold ${
+                        activity.roiData.paybackPeriodMonths <= 6 ? 'text-green-600' :
+                        activity.roiData.paybackPeriodMonths <= 12 ? 'text-blue-600' :
+                        activity.roiData.paybackPeriodMonths <= 24 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {activity.roiData.paybackPeriodMonths.toFixed(1)}m
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {activity.roiData ? (
+                      <span className="font-semibold text-green-600">
+                        {formatCurrency(activity.roiData.annualSavings)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">N/A</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
