@@ -25,19 +25,9 @@ export default function Home() {
           <ActivityForm onAddActivity={addActivity} />
         </section>
 
-        {/* Bottom Section - Running Totals Summary */}
+        {/* Results Section */}
         {activities.length > 0 && (
-          <section>
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-foreground mb-2">
-                Running Totals Summary
-              </h2>
-              <p className="text-muted-foreground">
-                Comprehensive analysis of all your manual activities and automation opportunities.
-              </p>
-            </div>
-            <RunningTotalsSection activities={activities} onRemoveActivity={removeActivity} />
-          </section>
+          <RunningTotalsSection activities={activities} onRemoveActivity={removeActivity} />
         )}
       </div>
     </div>

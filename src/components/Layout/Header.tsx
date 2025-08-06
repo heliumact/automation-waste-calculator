@@ -13,7 +13,7 @@ export function Header() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                Manual Activity Waste Calculator
+                Automation ROI Calculator
               </h1>
               <p className="text-sm text-muted-foreground">
                 Calculate the current cost of your manual activities, the cost of automating them, and the expected ROI based on the saved manual effort

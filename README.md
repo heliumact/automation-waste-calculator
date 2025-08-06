@@ -1,4 +1,4 @@
-# Automation Waste Calculator
+# Automation ROI Calculator
 
 A modern web application to help organizations and individuals quantify the financial impact of manual administrative activities and understand the potential cost savings from automation investments.
 
